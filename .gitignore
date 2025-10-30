@@ -1,0 +1,8 @@
+backend/restaurant_logs.sqlite
+restaurant_logs.sqlite
+restaurant_logs_2025-10-29.json
+*.sqlite
+*_logs_*.json
+Functional Test Cases.xlsx
+Project documentation(step by step approach).docx
+
