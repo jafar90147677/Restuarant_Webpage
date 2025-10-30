@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Fixes Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 3px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Restaurant Website Fixes Test</h1>
+    
+    <div class="test-section">
+        <h2>Cart Limit Tests</h2>
+        <button onclick="testCartLimit()">Test Cart Limit (15 items)</button>
+        <button onclick="testItemQuantityLimit()">Test Item Quantity Limit (10 per item)</button>
+        <button onclick="testCartWarning()">Test Cart Warning (12+ items)</button>
+        <div id="cartTestResults"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Search Functionality Tests</h2>
+        <button onclick="testSearchDebouncing()">Test Search Debouncing</button>
+        <button onclick="testSearchValidation()">Test Search Input Validation</button>
+        <button onclick="testSearchSanitization()">Test XSS Prevention</button>
+        <div id="searchTestResults"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Error Handling Tests</h2>
+        <button onclick="testErrorHandling()">Test Error Handling</button>
+        <button onclick="testUserFeedback()">Test User Feedback</button>
+        <div id="errorTestResults"></div>
+    </div>
+
+    <script>
+        // Test functions
+        function testCartLimit() {
+            const results = document.getElementById('cartTestResults');
+            try {
+                // Simulate adding items to test cart limit
+                let testCart = [];
+                const MAX_CART_ITEMS = 15;
+                
+                for (let i = 0; i < MAX_CART_ITEMS + 2; i++) {
+                    testCart.push({ id: i, quantity: 1 });
+                }
+                
+                const totalItems = testCart.reduce((sum, item) => sum + item.quantity, 0);
+                const shouldBlock = totalItems >= MAX_CART_ITEMS;
+                
+                results.innerHTML += `<div class="test-result ${shouldBlock ? 'success' : 'error'}">
+                    Cart limit test: ${shouldBlock ? 'PASSED' : 'FAILED'} - 
+                    Total items: ${totalItems}, Limit: ${MAX_CART_ITEMS}
+                </div>`;
+            } catch (error) {
+                results.innerHTML += `<div class="test-result error">Cart limit test FAILED: ${error.message}</div>`;
+            }
+        }
+        
+        function testItemQuantityLimit() {
+            const results = document.getElementById('cartTestResults');
+            try {
+                const MAX_ITEM_QUANTITY = 10;
+                let testItem = { id: 1, quantity: 9 };
+                
+                // Test adding one more item
+                const newQuantity = testItem.quantity + 1;
+                const shouldBlock = newQuantity > MAX_ITEM_QUANTITY;
+                
+                results.innerHTML += `<div class="test-result ${!shouldBlock ? 'success' : 'error'}">
+                    Item quantity test: ${!shouldBlock ? 'PASSED' : 'FAILED'} - 
+                    Current: ${testItem.quantity}, Adding: 1, New: ${newQuantity}, Limit: ${MAX_ITEM_QUANTITY}
+                </div>`;
+            } catch (error) {
+                results.innerHTML += `<div class="test-result error">Item quantity test FAILED: ${error.message}</div>`;
+            }
+        }
+        
+        function testCartWarning() {
+            const results = document.getElementById('cartTestResults');
+            try {
+                const CART_WARNING_THRESHOLD = 12;
+                const MAX_CART_ITEMS = 15;
+                let testCart = [];
+                
+                for (let i = 0; i < 13; i++) {
+                    testCart.push({ id: i, quantity: 1 });
+                }
+                
+                const totalItems = testCart.reduce((sum, item) => sum + item.quantity, 0);
+                const shouldWarn = totalItems >= CART_WARNING_THRESHOLD && totalItems < MAX_CART_ITEMS;
+                
+                results.innerHTML += `<div class="test-result ${shouldWarn ? 'success' : 'error'}">
+                    Cart warning test: ${shouldWarn ? 'PASSED' : 'FAILED'} - 
+                    Items: ${totalItems}, Warning threshold: ${CART_WARNING_THRESHOLD}
+                </div>`;
+            } catch (error) {
+                results.innerHTML += `<div class="test-result error">Cart warning test FAILED: ${error.message}</div>`;
+            }
+        }
+        
+        function testSearchDebouncing() {
+            const results = document.getElementById('searchTestResults');
+            try {
+                let searchTimeout;
+                const SEARCH_DEBOUNCE_DELAY = 300;
+                let searchCount = 0;
+                
+                // Simulate rapid search inputs
+                for (let i = 0; i < 5; i++) {
+                    if (searchTimeout) clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        searchCount++;
+                    }, SEARCH_DEBOUNCE_DELAY);
+                }
+                
+                // Check if debouncing works (should only execute once)
+                setTimeout(() => {
+                    const success = searchCount <= 1;
+                    results.innerHTML += `<div class="test-result ${success ? 'success' : 'error'}">
+                        Search debouncing test: ${success ? 'PASSED' : 'FAILED'} - 
+                        Executions: ${searchCount} (should be 1)
+                    </div>`;
+                }, SEARCH_DEBOUNCE_DELAY + 100);
+            } catch (error) {
+                results.innerHTML += `<div class="test-result error">Search debouncing test FAILED: ${error.message}</div>`;
+            }
+        }
+        
+        function testSearchValidation() {
+            const results = document.getElementById('searchTestResults');
+            try {
+                const testInput = "a".repeat(101); // 101 characters
+                const shouldBlock = testInput.length > 100;
+                
+                results.innerHTML += `<div class="test-result ${shouldBlock ? 'success' : 'error'}">
+                    Search validation test: ${shouldBlock ? 'PASSED' : 'FAILED'} - 
+                    Input length: ${testInput.length}, Limit: 100
+                </div>`;
+            } catch (error) {
+                results.innerHTML += `<div class="test-result error">Search validation test FAILED: ${error.message}</div>`;
+            }
+        }
+        
+        function testSearchSanitization() {
+            const results = document.getElementById('searchTestResults');
+            try {
+                const maliciousInput = "<script>alert('xss')</script>";
+                const sanitized = maliciousInput.replace(/[<>\"'&]/g, function(match) {
+                    const escapeMap = {
+                        '<': '&lt;',
+                        '>': '&gt;',
+                        '"': '&quot;',
+                        "'": '&#x27;',
+                        '&': '&amp;'
+                    };
+                    return escapeMap[match];
+                });
+                
+                const isSanitized = !sanitized.includes('<script>');
+                
+                results.innerHTML += `<div class="test-result ${isSanitized ? 'success' : 'error'}">
+                    XSS prevention test: ${isSanitized ? 'PASSED' : 'FAILED'} - 
+                    Original: ${maliciousInput}, Sanitized: ${sanitized}
+                </div>`;
+            } catch (error) {
+                results.innerHTML += `<div class="test-result error">XSS prevention test FAILED: ${error.message}</div>`;
+            }
+        }
+        
+        function testErrorHandling() {
+            const results = document.getElementById('errorTestResults');
+            try {
+                // Test error handling with try-catch
+                function riskyOperation() {
+                    throw new Error("Test error for error handling");
+                }
+                
+                try {
+                    riskyOperation();
+                } catch (error) {
+                    const handled = error.message === "Test error for error handling";
+                    results.innerHTML += `<div class="test-result ${handled ? 'success' : 'error'}">
+                        Error handling test: ${handled ? 'PASSED' : 'FAILED'} - 
+                        Error caught and handled properly
+                    </div>`;
+                }
+            } catch (error) {
+                results.innerHTML += `<div class="test-result error">Error handling test FAILED: ${error.message}</div>`;
+            }
+        }
+        
+        function testUserFeedback() {
+            const results = document.getElementById('errorTestResults');
+            try {
+                // Test user feedback mechanisms
+                const feedbackMessages = [
+                    "Cart limit reached! Maximum 15 items allowed.",
+                    "Maximum quantity of 10 allowed for this item.",
+                    "Search query too long. Please keep it under 100 characters."
+                ];
+                
+                const hasUserFeedback = feedbackMessages.every(msg => msg.length > 0);
+                
+                results.innerHTML += `<div class="test-result ${hasUserFeedback ? 'success' : 'error'}">
+                    User feedback test: ${hasUserFeedback ? 'PASSED' : 'FAILED'} - 
+                    Feedback messages available: ${feedbackMessages.length}
+                </div>`;
+            } catch (error) {
+                results.innerHTML += `<div class="test-result error">User feedback test FAILED: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
+

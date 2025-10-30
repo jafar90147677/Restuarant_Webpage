@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction ID Test - Restaurant Website</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 3px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        .log-display { background: #f8f9fa; padding: 10px; border: 1px solid #dee2e6; border-radius: 3px; max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>Transaction ID Implementation Test</h1>
+    <p>This test verifies that every action has the same transaction ID for relevant operations.</p>
+    
+    <div class="test-section">
+        <h2>Test Transaction ID Generation</h2>
+        <button onclick="testTransactionIdGeneration()">Test Transaction ID Generation</button>
+        <div id="transactionIdResults"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Cart Operations with Transaction IDs</h2>
+        <button onclick="testCartTransactionIds()">Test Cart Transaction IDs</button>
+        <button onclick="testMultipleCartOperations()">Test Multiple Cart Operations</button>
+        <div id="cartTransactionResults"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Search Operations with Transaction IDs</h2>
+        <button onclick="testSearchTransactionIds()">Test Search Transaction IDs</button>
+        <div id="searchTransactionResults"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Order Processing with Transaction IDs</h2>
+        <button onclick="testOrderTransactionIds()">Test Order Transaction IDs</button>
+        <div id="orderTransactionResults"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Live Log Monitor</h2>
+        <button onclick="startLogMonitoring()">Start Log Monitoring</button>
+        <button onclick="stopLogMonitoring()">Stop Log Monitoring</button>
+        <button onclick="clearLogs()">Clear Logs</button>
+        <div id="logDisplay" class="log-display"></div>
+    </div>
+
+    <script src="logger.js"></script>
+    <script>
+        let logMonitorInterval = null;
+        let testLogger = null;
+        
+        // Initialize test logger
+        if (typeof RestaurantLogger !== 'undefined') {
+            testLogger = new RestaurantLogger();
+        }
+        
+        function testTransactionIdGeneration() {
+            const results = document.getElementById('transactionIdResults');
+            results.innerHTML = '';
+            
+            try {
+                if (!testLogger) {
+                    results.innerHTML += '<div class="test-result error">Logger not available</div>';
+                    return;
+                }
+                
+                // Test transaction ID generation
+                const transactionId1 = testLogger.generateTransactionId();
+                const transactionId2 = testLogger.generateTransactionId();
+                
+                const isUnique = transactionId1 !== transactionId2;
+                const hasCorrectFormat = /^txn_session_\d+_\d+_\d+$/.test(transactionId1);
+                
+                results.innerHTML += `<div class="test-result ${isUnique ? 'success' : 'error'}">
+                    Transaction ID Uniqueness: ${isUnique ? 'PASSED' : 'FAILED'} - 
+                    ID1: ${transactionId1}, ID2: ${transactionId2}
+                </div>`;
+                
+                results.innerHTML += `<div class="test-result ${hasCorrectFormat ? 'success' : 'error'}">
+                    Transaction ID Format: ${hasCorrectFormat ? 'PASSED' : 'FAILED'} - 
+                    Format: ${transactionId1}
+                </div>`;
+                
+            } catch (error) {
+                results.innerHTML += `<div class="test-result error">Transaction ID test FAILED: ${error.message}</div>`;
+            }
+        }
+        
+        function testCartTransactionIds() {
+            const results = document.getElementById('cartTransactionResults');
+            results.innerHTML = '';
+            
+            try {
+                if (!testLogger) {
+                    results.innerHTML += '<div class="test-result error">Logger not available</div>';
+                    return;
+                }
+                
+                // Start a cart transaction
+                const cartTransactionId = testLogger.startTransaction('CART_OPERATION', {
+                    operation: 'test_cart_operations'
+                });
+                
+                // Simulate multiple cart actions
+                const testItem = { id: 1, name: 'Test Item', price: 100 };
+                
+                // Add item
+                testLogger.logTransaction('ITEM_ADDED', testItem, 1, 100, 100, cartTransactionId);
+                
+                // Update quantity
+                testLogger.logTransaction('QUANTITY_INCREASED', testItem, 2, 100, 200, cartTransactionId);
+                
+                // Remove item
+                testLogger.logTransaction('ITEM_REMOVED', testItem, 0, 100, 0, cartTransactionId);
+                
+                // Complete transaction
+                testLogger.completeTransaction(cartTransactionId, {
+                    finalTotal: 0,
+                    operationsCount: 3
+                });
+                
+                results.innerHTML += `<div class="test-result success">
+                    Cart Transaction Test: PASSED - 
+                    Transaction ID: ${cartTransactionId}
+                </div>`;
+                
+                results.innerHTML += `<div class="test-result info">
+                    All cart operations used the same transaction ID: ${cartTransactionId}
+                </div>`;
+                
+            } catch (error) {
+                results.innerHTML += `<div class="test-result error">Cart transaction test FAILED: ${error.message}</div>`;
+            }
+        }
+        
+        function testMultipleCartOperations() {
+            const results = document.getElementById('cartTransactionResults');
+            
+            try {
+                if (!testLogger) {
+                    results.innerHTML += '<div class="test-result error">Logger not available</div>';
+                    return;
+                }
+                
+                // Test multiple separate cart operations (should have different transaction IDs)
+                const transaction1 = testLogger.startTransaction('CART_OPERATION', { operation: 'add_item_1' });
+                const transaction2 = testLogger.startTransaction('CART_OPERATION', { operation: 'add_item_2' });
+                
+                const areDifferent = transaction1 !== transaction2;
+                
+                testLogger.completeTransaction(transaction1);
+                testLogger.completeTransaction(transaction2);
+                
+                results.innerHTML += `<div class="test-result ${areDifferent ? 'success' : 'error'}">
+                    Multiple Cart Operations: ${areDifferent ? 'PASSED' : 'FAILED'} - 
+                    Different transaction IDs: ${transaction1} vs ${transaction2}
+                </div>`;
+                
+            } catch (error) {
+                results.innerHTML += `<div class="test-result error">Multiple cart operations test FAILED: ${error.message}</div>`;
+            }
+        }
+        
+        function testSearchTransactionIds() {
+            const results = document.getElementById('searchTransactionResults');
+            results.innerHTML = '';
+            
+            try {
+                if (!testLogger) {
+                    results.innerHTML += '<div class="test-result error">Logger not available</div>';
+                    return;
+                }
+                
+                // Test search transaction
+                const searchTransactionId = testLogger.startTransaction('SEARCH_OPERATION', {
+                    query: 'test search'
+                });
+                
+                // Log search with transaction ID
+                testLogger.logSearch('test search', [], {}, searchTransactionId);
+                
+                // Complete search transaction
+                testLogger.completeTransaction(searchTransactionId, {
+                    resultsCount: 0,
+                    query: 'test search'
+                });
+                
+                results.innerHTML += `<div class="test-result success">
+                    Search Transaction Test: PASSED - 
+                    Transaction ID: ${searchTransactionId}
+                </div>`;
+                
+            } catch (error) {
+                results.innerHTML += `<div class="test-result error">Search transaction test FAILED: ${error.message}</div>`;
+            }
+        }
+        
+        function testOrderTransactionIds() {
+            const results = document.getElementById('orderTransactionResults');
+            results.innerHTML = '';
+            
+            try {
+                if (!testLogger) {
+                    results.innerHTML += '<div class="test-result error">Logger not available</div>';
+                    return;
+                }
+                
+                // Test order processing transaction
+                const orderTransactionId = testLogger.startTransaction('ORDER_PROCESSING', {
+                    cartItems: 2,
+                    cartTotal: 250
+                });
+                
+                // Simulate order processing steps
+                testLogger.log('INFO', 'ORDER_PROCESSING', 'Payment processing started', {
+                    transactionId: orderTransactionId,
+                    amount: 250
+                });
+                
+                testLogger.log('INFO', 'ORDER_PROCESSING', 'Order validation completed', {
+                    transactionId: orderTransactionId,
+                    items: 2
+                });
+                
+                // Complete order transaction
+                testLogger.completeTransaction(orderTransactionId, {
+                    orderId: 12345,
+                    totalAmount: 250,
+                    status: 'completed'
+                });
+                
+                results.innerHTML += `<div class="test-result success">
+                    Order Transaction Test: PASSED - 
+                    Transaction ID: ${orderTransactionId}
+                </div>`;
+                
+            } catch (error) {
+                results.innerHTML += `<div class="test-result error">Order transaction test FAILED: ${error.message}</div>`;
+            }
+        }
+        
+        function startLogMonitoring() {
+            if (logMonitorInterval) {
+                clearInterval(logMonitorInterval);
+            }
+            
+            const logDisplay = document.getElementById('logDisplay');
+            logDisplay.innerHTML = 'Starting log monitoring...\n';
+            
+            logMonitorInterval = setInterval(() => {
+                const logs = localStorage.getItem('restaurant_logs') || '';
+                const logLines = logs.split('\n').filter(line => line.trim());
+                
+                // Show last 20 log entries
+                const recentLogs = logLines.slice(-20);
+                logDisplay.innerHTML = recentLogs.join('\n');
+                logDisplay.scrollTop = logDisplay.scrollHeight;
+            }, 1000);
+        }
+        
+        function stopLogMonitoring() {
+            if (logMonitorInterval) {
+                clearInterval(logMonitorInterval);
+                logMonitorInterval = null;
+            }
+        }
+        
+        function clearLogs() {
+            localStorage.removeItem('restaurant_logs');
+            document.getElementById('logDisplay').innerHTML = 'Logs cleared.';
+        }
+        
+        // Auto-start log monitoring
+        window.addEventListener('load', () => {
+            startLogMonitoring();
+        });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Log Viewer - Eat Well😋</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .log-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .log-header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .log-header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .log-controls {
+            display: flex;
+            gap: 15px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        select, input, button {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .log-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .log-content {
+            max-height: 600px;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .log-entry {
+            margin-bottom: 10px;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 4px solid #dee2e6;
+            background: #f8f9fa;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .log-entry.error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .log-entry.warn {
+            border-left-color: #ffc107;
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .log-entry.info {
+            border-left-color: #17a2b8;
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .log-entry.debug {
+            border-left-color: #28a745;
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .log-entry.trace {
+            border-left-color: #6c757d;
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .log-timestamp {
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .log-level {
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .log-category {
+            color: #007bff;
+            font-weight: bold;
+        }
+
+        .log-message {
+            color: #212529;
+        }
+
+        .log-data {
+            color: #6c757d;
+            font-size: 11px;
+            margin-top: 5px;
+        }
+
+        .no-logs {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #007bff;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .filter-highlight {
+            background: yellow !important;
+        }
+
+        @media (max-width: 768px) {
+            .log-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .control-group {
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="log-container">
+        <div class="log-header">
+            <h1><i class="fas fa-chart-line"></i> Restaurant Log Viewer</h1>
+            <p>Real-time monitoring and analysis of restaurant application logs</p>
+        </div>
+
+        <div class="log-controls">
+            <div class="control-group">
+                <label for="levelFilter">Log Level:</label>
+                <select id="levelFilter">
+                    <option value="all">All Levels</option>
+                    <option value="ERROR">Errors Only</option>
+                    <option value="WARN">Warnings & Errors</option>
+                    <option value="INFO">Info & Above</option>
+                    <option value="DEBUG">Debug & Above</option>
+                    <option value="TRACE">All Logs</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="categoryFilter">Category:</label>
+                <select id="categoryFilter">
+                    <option value="all">All Categories</option>
+                    <option value="CART_OPERATION">Cart Operations</option>
+                    <option value="CHECKOUT">Checkout</option>
+                    <option value="SEARCH">Search</option>
+                    <option value="FILTER_SELECTION">Filter Selection</option>
+                    <option value="USER_INTERACTION">User Interaction</option>
+                    <option value="SYSTEM_ERROR">System Errors</option>
+                    <option value="PERFORMANCE">Performance</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="searchFilter">Search:</label>
+                <input type="text" id="searchFilter" placeholder="Search logs...">
+            </div>
+
+            <div class="control-group">
+                <button onclick="refreshLogs()"><i class="fas fa-sync"></i> Refresh</button>
+                <input id="apiBase" placeholder="http://127.0.0.1:8000" style="padding:8px;border:1px solid #ced4da;border-radius:6px;width:220px" />
+                <button onclick="apiLoadPage(0)" class="btn-success"><i class="fas fa-cloud-download-alt"></i> API Load</button>
+                <button onclick="exportLogs()" class="btn-success"><i class="fas fa-download"></i> Export</button>
+                <button onclick="clearLogs()" class="btn-danger"><i class="fas fa-trash"></i> Clear</button>
+            </div>
+        </div>
+
+        <div class="log-stats" id="logStats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalLogs">0</div>
+                <div class="stat-label">Total Logs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="errorCount">0</div>
+                <div class="stat-label">Errors</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="warningCount">0</div>
+                <div class="stat-label">Warnings</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="sessionDuration">0</div>
+                <div class="stat-label">Session Duration (min)</div>
+            </div>
+        </div>
+
+        <div class="log-content" id="logContent">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Loading logs...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class LogViewer {
+            constructor() {
+                this.logs = [];
+                this.filteredLogs = [];
+                this._refreshHandle = null;
+                this.useInMemory = false;
+                this.init();
+            }
+
+            init() {
+                this.loadLogs();
+                this.setupEventListeners();
+                this.startAutoRefresh();
+            }
+
+            loadLogs() {
+                try {
+                    const logData = localStorage.getItem('restaurant_logs') || '';
+                    this.logs = this.parseLogs(logData);
+                    this.applyFilters();
+                    this.updateStats();
+                    this.renderLogs();
+                } catch (error) {
+                    console.error('Error loading logs:', error);
+                    this.showError('Failed to load logs');
+                }
+            }
+
+            parseLogs(logData) {
+                const lines = logData.split('\n').filter(line => line.trim());
+                return lines.map(line => {
+                    try {
+                        const parts = line.split(' | ');
+                        if (parts.length >= 6) {
+                            return {
+                                timestamp: parts[0],
+                                level: parts[1],
+                                category: parts[2],
+                                message: parts[3],
+                                sessionId: parts[4].replace('Session: ', ''),
+                                userId: parts[5].replace('User: ', ''),
+                                data: parts[6] ? JSON.parse(parts[6].replace('Data: ', '')) : {}
+                            };
+                        }
+                    } catch (e) {
+                        return null;
+                    }
+                    return null;
+                }).filter(log => log !== null);
+            }
+
+            setupEventListeners() {
+                document.getElementById('levelFilter').addEventListener('change', () => this.applyFilters());
+                document.getElementById('categoryFilter').addEventListener('change', () => this.applyFilters());
+                document.getElementById('searchFilter').addEventListener('input', () => this.applyFilters());
+            }
+
+            applyFilters() {
+                const levelFilter = document.getElementById('levelFilter').value;
+                const categoryFilter = document.getElementById('categoryFilter').value;
+                const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
+
+                this.filteredLogs = this.logs.filter(log => {
+                    const levelMatch = levelFilter === 'all' || log.level === levelFilter;
+                    const categoryMatch = categoryFilter === 'all' || log.category === categoryFilter;
+                    const searchMatch = !searchFilter || 
+                        log.message.toLowerCase().includes(searchFilter) ||
+                        log.category.toLowerCase().includes(searchFilter) ||
+                        JSON.stringify(log.data).toLowerCase().includes(searchFilter);
+
+                    return levelMatch && categoryMatch && searchMatch;
+                });
+
+                this.renderLogs();
+            }
+
+            renderLogs() {
+                const container = document.getElementById('logContent');
+                
+                if (this.filteredLogs.length === 0) {
+                    container.innerHTML = '<div class="no-logs"><i class="fas fa-info-circle"></i><br>No logs found matching the current filters</div>';
+                    return;
+                }
+
+                const html = this.filteredLogs.map(log => `
+                    <div class="log-entry ${log.level.toLowerCase()}">
+                        <div class="log-timestamp">${log.timestamp}</div>
+                        <div class="log-level">${log.level}</div>
+                        <div class="log-category">${log.category}</div>
+                        <div class="log-message">${log.message}</div>
+                        <div class="log-data">Session: ${log.sessionId} | User: ${log.userId}</div>
+                        ${Object.keys(log.data).length > 0 ? `<div class="log-data">Data: ${JSON.stringify(log.data, null, 2)}</div>` : ''}
+                    </div>
+                `).join('');
+
+                container.innerHTML = html;
+            }
+
+            updateStats() {
+                const stats = {
+                    total: this.logs.length,
+                    errors: this.logs.filter(log => log.level === 'ERROR').length,
+                    warnings: this.logs.filter(log => log.level === 'WARN').length,
+                    sessionDuration: this.calculateSessionDuration()
+                };
+
+                document.getElementById('totalLogs').textContent = stats.total;
+                document.getElementById('errorCount').textContent = stats.errors;
+                document.getElementById('warningCount').textContent = stats.warnings;
+                document.getElementById('sessionDuration').textContent = stats.sessionDuration;
+            }
+
+            calculateSessionDuration() {
+                if (this.logs.length === 0) return 0;
+                
+                const firstLog = this.logs[0];
+                const lastLog = this.logs[this.logs.length - 1];
+                
+                try {
+                    const start = new Date(firstLog.timestamp);
+                    const end = new Date(lastLog.timestamp);
+                    return Math.round((end - start) / (1000 * 60));
+                } catch (e) {
+                    return 0;
+                }
+            }
+
+            startAutoRefresh() {
+                if (this._refreshHandle) clearInterval(this._refreshHandle);
+                this._refreshHandle = setInterval(() => { this.loadLogs(); }, 5000);
+            }
+
+            stopAutoRefresh() {
+                if (this._refreshHandle) { clearInterval(this._refreshHandle); this._refreshHandle = null; }
+            }
+
+            showError(message) {
+                document.getElementById('logContent').innerHTML = `
+                    <div class="no-logs">
+                        <i class="fas fa-exclamation-triangle"></i><br>
+                        ${message}
+                    </div>
+                `;
+            }
+        }
+
+        // Global functions for buttons
+        function refreshLogs() {
+            logViewer.loadLogs();
+        }
+
+        function exportLogs() {
+            const logData = localStorage.getItem('restaurant_logs') || '';
+            const blob = new Blob([logData], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `restaurant_logs_${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function clearLogs() {
+            if (confirm('Are you sure you want to clear all logs? This action cannot be undone.')) {
+                localStorage.removeItem('restaurant_logs');
+                logViewer.loadLogs();
+            }
+        }
+
+        async function apiLoadPage(offset) {
+            try {
+                const base = (document.getElementById('apiBase').value || 'http://127.0.0.1:8000').replace(/\/$/, '');
+                const limit = 2000;
+                const res = await fetch(`${base}/logs?offset=${offset||0}&limit=${limit}`);
+                if (!res.ok) throw new Error('API error');
+                const payload = await res.json();
+                const toLine = (r) => `${r.ts} | ${r.level} | ${r.category} | ${r.message} | Session: ${r.session_id} | User: ${r.user_id} | Data: ${r.data}`;
+                const joined = (payload.logs || []).map(toLine).join('\n');
+                const parsed = logViewer.parseLogs(joined);
+                logViewer.stopAutoRefresh();
+                logViewer.useInMemory = true;
+                logViewer.logs = parsed;
+                logViewer.applyFilters();
+                logViewer.updateStats();
+                logViewer.renderLogs();
+                alert(`Loaded ${parsed.length} logs from API`);
+            } catch (e) {
+                console.error(e);
+                alert('Failed to load from API. Make sure backend is running: uvicorn backend.app:app --reload');
+            }
+        }
+
+        // Initialize log viewer
+        const logViewer = new LogViewer();
+    </script>
+</body>
+</html>

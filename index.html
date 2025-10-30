@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eat Well😋 Restaurant - Order Online</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="logger.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1><i class="fas fa-utensils"></i> Eat Well😋</h1>
+                <p>Authentic Indian Cuisine</p>
+            </div>
+            <div class="cart-icon" onclick="toggleCart()">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="cart-count" id="cartCount">0</span>
+            </div>
+            <div class="log-viewer-link" style="margin-left: 10px;">
+                <a href="log_viewer.html" target="_blank" style="color: white; text-decoration: none; padding: 8px 12px; background: #27ae60; border-radius: 5px; font-size: 14px;">
+                    <i class="fas fa-chart-line"></i> View Logs
+                </a>
+            </div>
+            <div class="test-errors-link" style="margin-left: 10px;">
+                <button onclick="triggerTestErrors()" style="color: white; text-decoration: none; padding: 8px 12px; background: #e74c3c; border: none; border-radius: 5px; font-size: 14px; cursor: pointer;">
+                    <i class="fas fa-bug"></i> Test Errors
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h2>Welcome to Eat Well😋</h2>
+            <p>Experience authentic Indian flavors delivered to your table</p>
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <i class="fas fa-users"></i>
+                    <span class="stat-number" data-target="1250">0</span>
+                    <span class="stat-label">Happy Customers</span>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-utensils"></i>
+                    <span class="stat-number" data-target="96">0</span>
+                    <span class="stat-label">Menu Items</span>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-star"></i>
+                    <span class="stat-number" data-target="4.8">0</span>
+                    <span class="stat-label">Rating</span>
+                </div>
+            </div>
+            
+        </div>
+    </section>
+
+    <!-- Menu Categories -->
+    <nav class="menu-nav">
+        <div class="container">
+            <button class="nav-btn active" data-category="all">All Items</button>
+            <button class="nav-btn" data-category="starters">Starters</button>
+            <button class="nav-btn" data-category="veg">Veg Items</button>
+            <button class="nav-btn" data-category="nonveg">Non-Veg Items</button>
+            <button class="nav-btn" data-category="snacks">Snacks</button>
+            <button class="nav-btn" data-category="cooldrinks">Cool Drinks</button>
+            <button class="nav-btn" data-category="milkshakes">Milk Shakes</button>
+            <button class="nav-btn" data-category="icecreams">Ice Creams</button>
+        </div>
+    </nav>
+
+    <!-- Search and Filter Section -->
+    <section class="search-section">
+        <div class="container">
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Search for your favorite dish...">
+                <button class="clear-search" onclick="clearSearch()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="filter-options">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="popular">Popular</button>
+                <button class="filter-btn" data-filter="spicy">Spicy</button>
+                <button class="filter-btn" data-filter="sweet">Sweet</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Menu Items -->
+    <main class="menu-section">
+        <div class="container">
+            <div class="menu-header">
+                <h3 id="menuTitle">All Menu Items</h3>
+                <div class="sort-options">
+                    <select id="sortSelect" onchange="sortMenu()">
+                        <option value="default">Sort by</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                        <option value="name">Name: A to Z</option>
+                        <option value="popular">Most Popular</option>
+                    </select>
+                </div>
+            </div>
+            <div class="menu-grid" id="menuGrid">
+                <!-- Menu items will be populated by JavaScript -->
+            </div>
+            <div class="no-results" id="noResults" style="display: none;">
+                <i class="fas fa-search"></i>
+                <h3>No items found</h3>
+                <p>Try adjusting your search or filter criteria</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Shopping Cart Sidebar -->
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h3><i class="fas fa-shopping-cart"></i> Your Order</h3>
+            <button class="close-cart" onclick="toggleCart()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="cart-items" id="cartItems">
+            <!-- Cart items will be populated by JavaScript -->
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <strong>Total: ₹<span id="cartTotal">0.00</span></strong>
+            </div>
+            <button class="checkout-btn" onclick="checkout()">
+                <i class="fas fa-credit-card"></i> Place Order
+            </button>
+        </div>
+    </div>
+
+    <!-- Cart Overlay -->
+    <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+
+    <!-- Order Confirmation Modal -->
+    <div class="modal" id="orderModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-check-circle"></i> Order Placed!</h3>
+                <button class="close-modal" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Thank you for your order! Your food will be ready in approximately 15-20 minutes.</p>
+                <div class="order-details" id="orderDetails">
+                    <!-- Order details will be populated by JavaScript -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" onclick="closeModal()">Continue Shopping</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Contact Info</h4>
+                    <p><i class="fas fa-phone"></i> 7013991386</p>
+                    <p><i class="fas fa-envelope"></i> eatwell143@gmail.com</p>
+                    <p><i class="fas fa-map-marker-alt"></i> Ramachandrapuram</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Hours</h4>
+                    <p>Mon-Thu: 11:00 AM - 10:00 PM</p>
+                    <p>Fri-Sat: 11:00 AM - 11:00 PM</p>
+                    <p>Sun: 12:00 PM - 9:00 PM</p>
+                </div>
+                <div class="footer-section">
+                    <h4>QR Code</h4>
+                    <div class="qr-code">
+                        <img src="a.a.s.surya_qr.png" alt="QR code" id="qrCodeImage" width="120" height="120" />
+                        <p>Scan to contact the Owner</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
