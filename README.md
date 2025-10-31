@@ -10,7 +10,7 @@ A simple static website for the Eat Well😋 restaurant built with HTML, CSS, an
 ## How to use ereetetetbcvbvn
 - Open `index.html` in any modern web browser
 
-## Project files
+## Project filesbvbvn
 - `index.html` — main page markup
 - `styles.css` — site styles
 - `script.js` — client-side behavior
