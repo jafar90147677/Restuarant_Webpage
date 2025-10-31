@@ -7,7 +7,7 @@ A simple static website for the Eat Well😋 restaurant built with HTML, CSS, an
 - Interactive menu with categories, search, sorting
 - Shopping cart sidebar and order confirmation modal
 
-## How to use ereetetet
+## How to use ereetetetbcvbvn
 - Open `index.html` in any modern web browser
 
 ## Project files
