@@ -2,7 +2,7 @@
 
 A simple static website for the Eat Well😋 restaurant built with HTML, CSS, and JavaScript.
 
-## Features
+## Features kgjhg
 - Responsive layout
 - Interactive menu with categories, search, sorting
 - Shopping cart sidebar and order confirmation modal
