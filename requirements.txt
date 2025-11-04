@@ -1,0 +1,21 @@
+# Testing framework
+pytest==7.4.3
+pytest-html==4.1.1
+pytest-cov==4.1.0
+pytest-xdist==3.5.0
+
+# HTML/CSS/JS validation
+beautifulsoup4==4.12.2
+html5validator==0.4.3
+jsbeautifier==1.14.11
+cssutils==2.7.1
+
+# HTTP testing
+requests==2.31.0
+
+# Optional: Selenium for browser testing
+selenium==4.15.2
+
+# Code quality
+flake8==6.1.0
+

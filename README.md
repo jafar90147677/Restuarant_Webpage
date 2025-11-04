@@ -18,6 +18,4 @@ A simple static website for the Eat Well😋 restaurant built with HTML, CSS, an
 ## Developmentjhh
 - Update `index.html` for content and structure
 - Edit `styles.css` for visual changes
-- Modify `script.js` for interactionsvhv
-sdfgfdg
-fgfdhdfdgfdg
+- Modify `script.js` for interactions
