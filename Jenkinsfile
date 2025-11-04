@@ -92,24 +92,24 @@ pipeline {
                             --self-contained-html \
                             --cov=. \
                             --cov-report=html \
-                            --cov-report=xml \
-                            || true
+                            --cov-report=xml
                     '''
                 }
             }
             post {
                 always {
-                    junit testResults: 'pytest-report.xml'
+                    junit testResults: 'pytest-report.xml', allowEmptyResults: true
                     archiveArtifacts artifacts: 'pytest-report.xml, pytest-report.html', 
                                     allowEmptyArchive: true
                     archiveArtifacts artifacts: 'htmlcov/**/*', 
                                     allowEmptyArchive: true
                 }
                 success {
-                    echo "✓ All tests passed"
+                    echo "✓ All tests passed for branch: ${env.BRANCH_NAME}"
                 }
                 failure {
-                    echo "✗ Some tests failed (check reports)"
+                    echo "✗ Tests failed for branch: ${env.BRANCH_NAME}"
+                    error("Pytest tests failed - build aborted")
                 }
             }
         }
@@ -191,7 +191,7 @@ pipeline {
         stage('Docker Push') {
             steps {
                 script {
-                    echo "Pushing Docker image to registry..."
+                    echo "Pushing Docker image to registry for branch: ${env.BRANCH_NAME}"
                     withCredentials([usernamePassword(
                         credentialsId: "${DOCKER_CREDENTIALS_ID}",
                         usernameVariable: 'DOCKER_USER',
