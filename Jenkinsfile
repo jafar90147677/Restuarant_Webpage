@@ -67,9 +67,32 @@ pipeline {
                 script {
                     echo "Setting up Python virtual environment..."
                     sh '''
-                        python3 --version || python --version
-                        python3 -m venv venv || python -m venv venv
-                        source venv/bin/activate || . venv/bin/activate || venv\\Scripts\\activate
+                        # Check for Python installation
+                        if ! command -v python3 &> /dev/null && ! command -v python &> /dev/null; then
+                            echo "ERROR: Python is not installed or not in PATH"
+                            echo "Please install Python on the Jenkins agent"
+                            exit 1
+                        fi
+                        
+                        # Use python3 if available, otherwise python
+                        PYTHON_CMD=$(command -v python3 2>/dev/null || command -v python 2>/dev/null)
+                        echo "Using Python: $PYTHON_CMD"
+                        $PYTHON_CMD --version
+                        
+                        # Create virtual environment
+                        $PYTHON_CMD -m venv venv
+                        
+                        # Activate virtual environment
+                        if [ -f venv/bin/activate ]; then
+                            source venv/bin/activate
+                        elif [ -f venv/Scripts/activate ]; then
+                            . venv/Scripts/activate
+                        else
+                            echo "ERROR: Could not find virtual environment activation script"
+                            exit 1
+                        fi
+                        
+                        # Upgrade pip and install requirements
                         pip install --upgrade pip --quiet
                         pip install -r requirements.txt --quiet
                         echo "✓ Python environment ready"
@@ -162,6 +185,24 @@ pipeline {
             steps {
                 script {
                     echo "Building Docker image for branch: ${env.BRANCH_NAME}"
+                    sh '''
+                        # Check for Docker installation
+                        if ! command -v docker &> /dev/null; then
+                            echo "ERROR: Docker is not installed or not in PATH"
+                            echo "Please install Docker on the Jenkins agent or mount Docker socket"
+                            exit 1
+                        fi
+                        
+                        # Verify Docker daemon is accessible
+                        if ! docker info &> /dev/null; then
+                            echo "ERROR: Cannot connect to Docker daemon"
+                            echo "Please ensure Docker socket is mounted or Docker daemon is running"
+                            exit 1
+                        fi
+                        
+                        echo "✓ Docker is available"
+                        docker --version
+                    '''
                     withCredentials([usernamePassword(
                         credentialsId: "${DOCKER_CREDENTIALS_ID}",
                         usernameVariable: 'DOCKER_USER',
@@ -303,14 +344,18 @@ pipeline {
         }
         always {
             script {
-                // Cleanup
+                // Cleanup (only if Docker is available)
                 sh '''
                     echo "Cleaning up..."
-                    # Remove dangling images older than 1 hour
-                    docker image prune -f --filter "until=1h" || true
-                    
-                    # Remove old containers (optional)
-                    docker container prune -f --filter "until=24h" || true
+                    if command -v docker &> /dev/null && docker info &> /dev/null; then
+                        # Remove dangling images older than 1 hour
+                        docker image prune -f --filter "until=1h" || true
+                        
+                        # Remove old containers (optional)
+                        docker container prune -f --filter "until=24h" || true
+                    else
+                        echo "Docker not available, skipping cleanup"
+                    fi
                 '''
                 
                 // Archive build artifacts
