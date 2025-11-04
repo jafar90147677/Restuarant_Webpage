@@ -67,20 +67,37 @@ pipeline {
                 script {
                     echo "Setting up Python virtual environment..."
                     sh '''
-                        # Check for Python installation
-                        if ! command -v python3 &> /dev/null && ! command -v python &> /dev/null; then
+                        # Set PATH to include common binary locations
+                        export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH"
+                        
+                        # Check for Python installation - try multiple methods
+                        PYTHON_CMD=""
+                        if [ -x "/usr/bin/python3" ]; then
+                            PYTHON_CMD="/usr/bin/python3"
+                        elif [ -x "/usr/bin/python" ]; then
+                            PYTHON_CMD="/usr/bin/python"
+                        elif command -v python3 >/dev/null 2>&1; then
+                            PYTHON_CMD="python3"
+                        elif command -v python >/dev/null 2>&1; then
+                            PYTHON_CMD="python"
+                        elif python3 --version >/dev/null 2>&1; then
+                            PYTHON_CMD="python3"
+                        elif python --version >/dev/null 2>&1; then
+                            PYTHON_CMD="python"
+                        else
                             echo "ERROR: Python is not installed or not in PATH"
                             echo "Please install Python on the Jenkins agent"
                             exit 1
                         fi
                         
-                        # Use python3 if available, otherwise python
-                        PYTHON_CMD=$(command -v python3 2>/dev/null || command -v python 2>/dev/null)
                         echo "Using Python: $PYTHON_CMD"
                         $PYTHON_CMD --version
                         
                         # Create virtual environment
-                        $PYTHON_CMD -m venv venv
+                        $PYTHON_CMD -m venv venv || {
+                            echo "ERROR: Failed to create virtual environment"
+                            exit 1
+                        }
                         
                         # Activate virtual environment
                         if [ -f venv/bin/activate ]; then
@@ -91,6 +108,12 @@ pipeline {
                             echo "ERROR: Could not find virtual environment activation script"
                             exit 1
                         fi
+                        
+                        # Verify activation worked
+                        which pip >/dev/null 2>&1 || {
+                            echo "ERROR: Virtual environment activation failed"
+                            exit 1
+                        }
                         
                         # Upgrade pip and install requirements
                         pip install --upgrade pip --quiet
@@ -106,7 +129,20 @@ pipeline {
                 script {
                     echo "Running pytest for branch: ${env.BRANCH_NAME}"
                     sh '''
-                        source venv/bin/activate || . venv/bin/activate || venv\\Scripts\\activate
+                        # Set PATH to include common binary locations
+                        export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH"
+                        
+                        # Activate virtual environment
+                        if [ -f venv/bin/activate ]; then
+                            source venv/bin/activate
+                        elif [ -f venv/Scripts/activate ]; then
+                            . venv/Scripts/activate
+                        else
+                            echo "ERROR: Virtual environment not found"
+                            exit 1
+                        fi
+                        
+                        # Run pytest
                         pytest tests/ \
                             -v \
                             --tb=short \
