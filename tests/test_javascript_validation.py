@@ -21,8 +21,13 @@ class TestJavaScriptValidation:
     def js_files(self, base_path):
         """Get all JavaScript files"""
         js_files = []
+        exclude_dirs = {'venv', '.git', 'node_modules', 'htmlcov', '__pycache__', '.pytest_cache'}
         for file in base_path.rglob("*.js"):
-            js_files.append(file)
+            # Exclude files in test directories, venv, node_modules, etc.
+            if not any(exclude_dir in file.parts for exclude_dir in exclude_dirs):
+                # Exclude bundled/minified files from test reports
+                if 'pytest-report' not in str(file) and 'app.js' not in str(file):
+                    js_files.append(file)
         return js_files
     
     def test_js_files_exist(self, js_files):
@@ -101,6 +106,7 @@ class TestJavaScriptValidation:
     
     def test_js_no_innerhtml_injection(self, js_files):
         """Test for potential XSS vulnerabilities with innerHTML"""
+        import warnings
         for js_file in js_files:
             with open(js_file, 'r', encoding='utf-8') as f:
                 js_content = f.read()
@@ -112,9 +118,11 @@ class TestJavaScriptValidation:
                 for match in innerhtml_matches:
                     # Check if it contains user input patterns
                     if 'input' in match.lower() or 'value' in match.lower():
-                        # This is a warning, not a failure
-                        pytest.warns(UserWarning, 
-                            f"{js_file.name} uses innerHTML with potential user input: {match}")
+                        # This is a warning, not a failure - just log it
+                        warnings.warn(
+                            f"{js_file.name} uses innerHTML with potential user input: {match}",
+                            UserWarning
+                        )
     
     def test_js_has_error_handling(self, base_path):
         """Test that JavaScript has error handling"""

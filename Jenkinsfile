@@ -99,7 +99,7 @@ pipeline {
             }
             post {
                 always {
-                    publishTestResults testResultsPattern: 'pytest-report.xml'
+                    junit testResultsPattern: 'pytest-report.xml'
                     publishHTML([
                         reportDir: '.',
                         reportFiles: 'pytest-report.html',

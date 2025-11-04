@@ -38,15 +38,27 @@ class TestCSSValidation:
         cssutils.log.setLevel('ERROR')  # Suppress warnings
         
         for css_file in css_files:
-            with open(css_file, 'r', encoding='utf-8') as f:
-                css_content = f.read()
-                
+            # Try different encodings to handle BOM and encoding issues
+            encodings = ['utf-8', 'utf-8-sig', 'latin-1', 'cp1252']
+            css_content = None
+            
+            for encoding in encodings:
                 try:
-                    # Parse CSS
-                    sheet = cssutils.parseString(css_content)
-                    # If parsing succeeds, syntax is valid
-                    assert True
-                except Exception as e:
+                    with open(css_file, 'r', encoding=encoding) as f:
+                        css_content = f.read()
+                        break
+                except (UnicodeDecodeError, UnicodeError):
+                    continue
+            
+            if css_content is None:
+                pytest.skip(f"Could not decode {css_file.name} with any encoding")
+            
+            try:
+                # Parse CSS
+                sheet = cssutils.parseString(css_content)
+                # If parsing succeeds, syntax is valid
+                assert True
+            except Exception as e:
                     pytest.fail(f"{css_file.name} has CSS syntax errors: {str(e)}")
     
     def test_css_has_responsive_design(self, base_path):

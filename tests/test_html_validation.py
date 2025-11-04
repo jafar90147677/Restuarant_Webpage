@@ -2,6 +2,7 @@
 HTML validation tests for restaurant webpage
 """
 import pytest
+import re
 from pathlib import Path
 from bs4 import BeautifulSoup
 
@@ -64,7 +65,9 @@ class TestHTMLValidation:
                 content = f.read()
                 soup = BeautifulSoup(content, 'html.parser')
                 
-                charset_meta = soup.find('meta', {'charset': True})
+                # Check for charset in meta tag (can be attribute or content)
+                charset_meta = soup.find('meta', {'charset': True}) or \
+                               soup.find('meta', {'http-equiv': re.compile('charset', re.I)})
                 assert charset_meta is not None, \
                     f"{html_file.name} missing charset meta tag"
     
