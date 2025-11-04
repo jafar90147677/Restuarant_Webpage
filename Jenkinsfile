@@ -99,9 +99,9 @@ pipeline {
                             exit 1
                         }
                         
-                        # Activate virtual environment
+                        # Activate virtual environment (use . instead of source for sh compatibility)
                         if [ -f venv/bin/activate ]; then
-                            source venv/bin/activate
+                            . venv/bin/activate
                         elif [ -f venv/Scripts/activate ]; then
                             . venv/Scripts/activate
                         else
@@ -132,9 +132,9 @@ pipeline {
                         # Set PATH to include common binary locations
                         export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH"
                         
-                        # Activate virtual environment
+                        # Activate virtual environment (use . instead of source for sh compatibility)
                         if [ -f venv/bin/activate ]; then
-                            source venv/bin/activate
+                            . venv/bin/activate
                         elif [ -f venv/Scripts/activate ]; then
                             . venv/Scripts/activate
                         else
