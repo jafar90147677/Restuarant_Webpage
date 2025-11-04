@@ -198,10 +198,35 @@ pipeline {
                         passwordVariable: 'DOCKER_PASS'
                     )]) {
                         sh """
-                            echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin
-                            docker push ${DOCKER_IMAGE_NAME}:${IMAGE_TAG}
-                            docker push ${DOCKER_IMAGE_NAME}:${LATEST_TAG}
-                            echo "✓ Image pushed to registry"
+                            echo "Logging into Docker Hub..."
+                            if ! echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin; then
+                                echo "✗ ERROR: Docker Hub login failed"
+                                echo "Please check your Docker Hub credentials in Jenkins"
+                                exit 1
+                            fi
+                            
+                            echo "Verifying login..."
+                            if ! docker info | grep -q "Username: ${DOCKER_USER}"; then
+                                echo "⚠ Warning: Login verification failed, but continuing..."
+                            fi
+                            
+                            echo "Pushing image: ${DOCKER_IMAGE_NAME}:${IMAGE_TAG}"
+                            if ! docker push ${DOCKER_IMAGE_NAME}:${IMAGE_TAG}; then
+                                echo "✗ ERROR: Failed to push ${DOCKER_IMAGE_NAME}:${IMAGE_TAG}"
+                                echo "This may be due to:"
+                                echo "  1. Insufficient permissions on Docker Hub token"
+                                echo "  2. Repository doesn't exist or you don't have write access"
+                                echo "  3. Network connectivity issues"
+                                exit 1
+                            fi
+                            
+                            echo "Pushing latest tag: ${DOCKER_IMAGE_NAME}:${LATEST_TAG}"
+                            if ! docker push ${DOCKER_IMAGE_NAME}:${LATEST_TAG}; then
+                                echo "✗ ERROR: Failed to push ${DOCKER_IMAGE_NAME}:${LATEST_TAG}"
+                                exit 1
+                            fi
+                            
+                            echo "✓ Image pushed to registry successfully"
                         """
                     }
                 }
