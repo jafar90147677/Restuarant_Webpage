@@ -1,0 +1,19 @@
+# Standalone ngrok container for existing Jenkins
+# This connects to your existing Jenkins container
+
+version: '3.8'
+
+services:
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: ngrok
+    command: 
+      - "http"
+      - "host.docker.internal:32768"
+      - "--log=stdout"
+    ports:
+      - "4040:4040"
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
