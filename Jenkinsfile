@@ -24,6 +24,7 @@ pipeline {
         
         // Port mapping per branch
         CONTAINER_PORT = getPortForBranch("${env.BRANCH_NAME}")
+        HTTPS_PORT = String.valueOf(Integer.parseInt(getPortForBranch("${env.BRANCH_NAME}")) + 10000)
         CONTAINER_NAME = "restaurant-${env.BRANCH_NAME}"
     }
     
@@ -373,6 +374,7 @@ pipeline {
                             --name ${CONTAINER_NAME} \\
                             --restart unless-stopped \\
                             -p ${CONTAINER_PORT}:80 \\
+                            -p ${HTTPS_PORT}:443 \\
                             --health-cmd="wget --quiet --tries=1 --spider http://localhost/health || exit 1" \\
                             --health-interval=30s \\
                             --health-timeout=3s \\
@@ -383,7 +385,9 @@ pipeline {
                         
                         echo "✓ Container deployed successfully"
                         echo "Container ID: \$(docker ps -q -f name=${CONTAINER_NAME})"
-                        echo "Access URL: http://localhost:${CONTAINER_PORT}"
+                        echo "HTTP URL: http://localhost:${CONTAINER_PORT} (redirects to HTTPS)"
+                        echo "HTTPS URL: https://localhost:${HTTPS_PORT}"
+                        echo "Network HTTPS: https://192.168.1.6:${HTTPS_PORT}"
                         
                         # Wait for health check
                         echo "Waiting for container to be healthy..."
@@ -406,8 +410,10 @@ pipeline {
                 Build: ${env.BUILD_NUMBER}
                 Image: ${DOCKER_IMAGE_NAME}:${IMAGE_TAG}
                 Container: ${CONTAINER_NAME}
-                Port: ${CONTAINER_PORT}
-                URL: http://localhost:${CONTAINER_PORT}
+                HTTP Port: ${CONTAINER_PORT} (redirects to HTTPS)
+                HTTPS Port: ${HTTPS_PORT}
+                HTTPS URL: https://localhost:${HTTPS_PORT}
+                Network HTTPS: https://192.168.1.6:${HTTPS_PORT}
                 ==========================================
                 """
             }
