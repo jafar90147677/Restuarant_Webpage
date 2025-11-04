@@ -20,9 +20,17 @@ class TestHTMLValidation:
     def html_files(self, base_path):
         """Get all HTML files"""
         html_files = []
+        exclude_dirs = {'venv', '.git', 'node_modules', 'htmlcov', '__pycache__', '.pytest_cache'}
+        exclude_patterns = ['pytest-report', 'test_', 'z_', 'coverage']
+        
         for file in base_path.rglob("*.html"):
-            if file.name != "__init__.html":  # Exclude test files if needed
-                html_files.append(file)
+            # Exclude files in test directories, venv, etc.
+            if any(exclude_dir in file.parts for exclude_dir in exclude_dirs):
+                continue
+            # Exclude pytest-generated HTML files
+            if any(pattern in file.name for pattern in exclude_patterns):
+                continue
+            html_files.append(file)
         return html_files
     
     def test_html_files_exist(self, html_files):

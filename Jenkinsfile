@@ -100,11 +100,6 @@ pipeline {
             post {
                 always {
                     junit testResults: 'pytest-report.xml'
-                    publishHTML([
-                        reportDir: '.',
-                        reportFiles: 'pytest-report.html',
-                        reportName: 'Pytest HTML Report'
-                    ])
                     archiveArtifacts artifacts: 'pytest-report.xml, pytest-report.html', 
                                     allowEmptyArchive: true
                     archiveArtifacts artifacts: 'htmlcov/**/*', 
