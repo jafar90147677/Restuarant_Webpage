@@ -226,7 +226,7 @@ pipeline {
                         done
                         
                         # JavaScript syntax check (if Node.js available)
-                        if command -v node &> /dev/null; then
+                        if command -v node >/dev/null 2>&1; then
                             echo "Validating JavaScript files..."
                             find . -name "*.js" -type f ! -path "./venv/*" ! -path "./node_modules/*" ! -path "./.git/*" | while read file; do
                                 echo "  Checking: $file"
@@ -261,15 +261,15 @@ pipeline {
                         # Set PATH to include common binary locations
                         export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH"
                         
-                        # Check for Docker installation
-                        if ! command -v docker &> /dev/null; then
+                        # Check for Docker installation (use POSIX-compliant redirection)
+                        if ! command -v docker >/dev/null 2>&1; then
                             echo "ERROR: Docker is not installed or not in PATH"
                             echo "Please install Docker on the Jenkins agent or mount Docker socket"
                             exit 1
                         fi
                         
                         # Verify Docker daemon is accessible
-                        if ! docker info &> /dev/null; then
+                        if ! docker info >/dev/null 2>&1; then
                             echo "ERROR: Cannot connect to Docker daemon"
                             echo "Please ensure Docker socket is mounted or Docker daemon is running"
                             exit 1
@@ -428,7 +428,7 @@ pipeline {
                 // Cleanup (only if Docker is available)
                 sh '''
                     echo "Cleaning up..."
-                    if command -v docker &> /dev/null && docker info &> /dev/null; then
+                    if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
                         # Remove dangling images older than 1 hour
                         docker image prune -f --filter "until=1h" || true
                         
