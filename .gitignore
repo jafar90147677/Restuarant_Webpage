@@ -51,3 +51,6 @@ desktop.ini
 # Environment
 .env
 .env.local
+
+# Specstory (contains sensitive data)
+.specstory/
