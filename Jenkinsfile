@@ -222,6 +222,9 @@ pipeline {
                 script {
                     echo "Building Docker image for branch: ${env.BRANCH_NAME}"
                     sh '''
+                        # Set PATH to include common binary locations
+                        export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH"
+                        
                         # Check for Docker installation
                         if ! command -v docker &> /dev/null; then
                             echo "ERROR: Docker is not installed or not in PATH"
@@ -275,6 +278,9 @@ pipeline {
                         passwordVariable: 'DOCKER_PASS'
                     )]) {
                         sh """
+                            # Set PATH to include common binary locations
+                            export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:\$PATH"
+                            
                             echo "Logging into Docker Hub..."
                             if ! echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin; then
                                 echo "✗ ERROR: Docker Hub login failed"
@@ -315,6 +321,9 @@ pipeline {
                 script {
                     echo "Deploying container for branch: ${env.BRANCH_NAME}"
                     sh """
+                        # Set PATH to include common binary locations
+                        export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:\$PATH"
+                        
                         # Stop existing container if running
                         if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}\$"; then
                             echo "Stopping existing container: ${CONTAINER_NAME}"
