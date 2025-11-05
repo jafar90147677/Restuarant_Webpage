@@ -23,9 +23,6 @@ COPY test_transaction_ids.html .
 COPY a.a.s.surya_qr.png .
 COPY project_log.txt .
 
-# Copy SSL certificates
-COPY ssl/ /etc/nginx/ssl/
-
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
@@ -34,12 +31,10 @@ RUN echo "healthy" > /usr/share/nginx/html/health
 
 # Set proper permissions
 RUN chmod -R 755 /usr/share/nginx/html && \
-    chmod 600 /etc/nginx/ssl/*.key && \
-    chmod 644 /etc/nginx/ssl/*.crt && \
     chown -R nginx:nginx /usr/share/nginx/html
 
-# Expose ports 80 (HTTP redirect) and 443 (HTTPS)
-EXPOSE 80 443
+# Expose port 80 (HTTP only)
+EXPOSE 80
 
 # Health check
 HEALTHCHECK --interval=30s \
