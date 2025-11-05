@@ -1,0 +1,12 @@
+Hi! To access the secure website, you need to install this certificate:
+
+1. Download: rootCA-for-friends.pem
+2. Double-click it (Windows) or follow instructions in FRIEND_HTTPS_ACCESS.md
+3. Install it as a trusted root certificate
+4. Then visit: https://192.168.1.6:18038
+
+The certificate is safe - it's just needed so your browser trusts the secure connection.
+
+If you can't install the certificate, use this (less secure):
+http://192.168.1.6:8038
+

@@ -1,0 +1,17 @@
+services:
+  ngrok-restaurant:
+    image: ngrok/ngrok:latest
+    container_name: ngrok-restaurant
+    command:
+      - "http"
+      - "host.docker.internal:8038"
+      - "--authtoken=34f17w1pLrMyA8GyiYMMLrYE7kE_2EmBM8Fcr1ZJQp7eTzhMj"
+      - "--log=stdout"
+      - "--log-level=info"
+      - "--region=us"
+    ports:
+      - "4041:4040"
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+

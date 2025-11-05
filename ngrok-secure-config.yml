@@ -1,0 +1,24 @@
+# Secure ngrok configuration
+# This file can be used for advanced security features
+
+version: "2"
+authtoken: 34f17w1pLrMyA8GyiYMMLrYE7kE_2EmBM8Fcr1ZJQp7eTzhMj
+
+tunnels:
+  restaurant-secure:
+    proto: http
+    addr: host.docker.internal:8038
+    # Security features (uncomment to enable):
+    
+    # Basic Authentication (username/password)
+    # auth: "username:password"
+    
+    # IP Whitelist (only allow specific IPs)
+    # inspect: false
+    # bind_tls: true
+    
+    # Custom headers
+    # request_header:
+    #   add:
+    #     - "X-Custom-Header: value"
+

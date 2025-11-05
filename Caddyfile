@@ -1,0 +1,11 @@
+# Caddy automatically gets Let's Encrypt certificates
+
+# Domain with Let's Encrypt certificate
+restaurant-webpage.ddns.net {
+    reverse_proxy 127.0.0.1:18038
+}
+
+
+# Note: IP address access will use the domain certificate
+# Access via: https://restaurant-webpage.ddns.net (recommended)
+
